@@ -20,12 +20,19 @@
 #include "MK66F18.h"
 #include "fsl_debug_console.h"
 /* TODO: insert other include files here. */
-
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "Tareas.h"
 /* TODO: insert other definitions and declarations here. */
-
 /*
- * @brief   Application entry point.
- */
+static void task_Seconds( void *pvParameters );
+static void task_Minutes( void *pvParameters );
+static void task_Hours  ( void *pvParameters );
+*/
+const char *pcTextForSeconds1 = "Task 1 is running\r\n";
+const char *pcTextForMinutes2 = "Task 2 is running\r\n";
+const char *pcTextForHours3   = "Task 3 is running\r\n";
 int main(void) {
 
   	/* Init board hardware. */
@@ -37,14 +44,23 @@ int main(void) {
 
     PRINTF("Hello World\n");
 
-    /* Force the counter to be placed into memory. */
-    volatile static int i = 0 ;
+    /* Create the first task at priority 1... */
+    /* xTaskCreate uses:
+     * 		Pointer to the function that implements the task.
+     * 		Text name for the task.  This is to facilitate debugging only.
+     * 		Stack depth - most small microcontrollers will use much less stack than this.
+     * 		Task parameter, Pasamos una cadena de texto para DEBUG
+     * 		Priority
+     * 		We are not using the task handle.
+     * 		*/
+
+    xTaskCreate( task_Seconds, "task_Seconds", 500, (void*)pcTextForSeconds1, 1, NULL );
+    xTaskCreate( task_Minutes, "task_Minutes", 500, (void*)pcTextForMinutes2, 1, NULL );
+    xTaskCreate( task_Hours  , "task_Hours"  , 500, (void*)pcTextForHours3, 1, NULL );
+
     /* Enter an infinite loop, just incrementing a counter. */
     while(1) {
-        i++ ;
-        /* 'Dummy' NOP to allow source level single stepping of
-            tight while() loop */
-        __asm volatile ("nop");
+
     }
     return 0 ;
 }

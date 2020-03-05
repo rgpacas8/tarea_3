@@ -30,19 +30,6 @@
 
 /* TODO: insert other definitions and declarations here. */
 
-typedef struct
-{
-	SemaphoreHandle_t semaphore_FreeRTOs;
-	EventGroupHandle_t event_FreeRtos;
-	QueueHandle_t queue_freertos;
-	SemaphoreHandle_t mutex_UART_freertos;
-
-} parameters_task_t;
-
-const char *pcTextForSeconds1 = "Task 1 is running\r\n";
-const char *pcTextForMinutes2 = "Task 2 is running\r\n";
-const char *pcTextForHours3   = "Task 3 is running\r\n";
-
 int main(void) {
 
   	/* Init board hardware. */

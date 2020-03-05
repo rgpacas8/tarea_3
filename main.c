@@ -70,20 +70,20 @@ int main(void) {
 	 * 		- We are not using the task handle.
 	 * 		*/
 
-	xTaskCreate(task_Seconds, "task_Seconds", 500, (void*) &parameters_task,
+	xTaskCreate(task_Seconds, "task_Seconds", 200, (void*) &parameters_task,
 			configMAX_PRIORITIES, NULL);
 
-	xTaskCreate(task_Minutes, "task_Minutes", 500, (void*) &parameters_task,
+	xTaskCreate(task_Minutes, "task_Minutes", 200, (void*) &parameters_task,
 			configMAX_PRIORITIES, NULL);
 
-	xTaskCreate(task_Hours, "task_Hours", 	  500, (void*) &parameters_task,
-			configMAX_PRIORITIES, NULL);
+//	xTaskCreate(task_Hours, "task_Hours", 	  200, (void*) &parameters_task,
+//			configMAX_PRIORITIES, NULL);
 
-	xTaskCreate(task_Alarm, "task_Alarm", 	  500, (void*) &parameters_task,
-			configMAX_PRIORITIES, NULL);
+//	xTaskCreate(task_Alarm, "task_Alarm", 	  200, (void*) &parameters_task,
+//			configMAX_PRIORITIES, NULL);
 
-	xTaskCreate(task_Print, "task_Print", 	  500, (void*) &parameters_task,
-			configMAX_PRIORITIES, NULL);
+//	xTaskCreate(task_Print, "task_Print", 	  200, (void*) &parameters_task,
+//			configMAX_PRIORITIES, NULL);
 
 
 	/* Start the scheduler so the created tasks start executing. */

@@ -31,19 +31,19 @@ void task_Seconds(void *data)
 
 	while (1)
 	{
+		if ((event_minu_flag == TRUE)
+						&& (seconds == parameters_task.alarm.second)) {
+			xEventGroupSetBits(parameters_task.event_HH_MM_SS, EVENT_SECOND);
+		}
+
 		seconds++;
 		if (seconds >= SEGUNDOS) {
 			seconds = 0;
 			xSemaphoreGive(parameters_task.minutes_semaphore); // Libera semaforo de minutos
 		}
 
-		event_all_flags = xEventGroupGetBitsFromISR(parameters_task.event_HH_MM_SS);
+		event_all_flags = xEventGroupGetBits(parameters_task.event_HH_MM_SS);
 		event_minu_flag = ((event_all_flags) & (EVENT_MINUTE)) >> 1;
-
-		if ((event_minu_flag == TRUE)
-						&& (seconds == parameters_task.alarm.second)) {
-			xEventGroupSetBits(parameters_task.event_HH_MM_SS, EVENT_SECOND);
-		}
 
 		msg.value = seconds;
 		xQueueSend(parameters_task.time_queue, &msg, portMAX_DELAY);
@@ -63,6 +63,11 @@ void task_Minutes(void *data)
 
 	while (1)
 	{
+		if ((event_hora_flag == TRUE)
+						&& (minutes == parameters_task.alarm.minute)) {
+			xEventGroupSetBits(parameters_task.event_HH_MM_SS, EVENT_MINUTE);
+		}
+
 		xSemaphoreTake(parameters_task.minutes_semaphore,portMAX_DELAY);//Esperando para tomar semaforo de minutos
 		minutes++;
 		if (minutes >= MINUTOS) {
@@ -70,13 +75,8 @@ void task_Minutes(void *data)
 			minutes = 0;
 		}
 
-		event_all_flags = xEventGroupGetBitsFromISR(parameters_task.event_HH_MM_SS);
+		event_all_flags = xEventGroupGetBits(parameters_task.event_HH_MM_SS);
 		event_hora_flag = ((event_all_flags) & (EVENT_HOUR)) >> 2;
-
-		if ((event_hora_flag == TRUE)
-						&& (minutes == parameters_task.alarm.minute)) {
-			xEventGroupSetBits(parameters_task.event_HH_MM_SS, EVENT_MINUTE);
-		}
 
 		msg.value = minutes;
 		xQueueSend(parameters_task.time_queue, &msg, portMAX_DELAY);
@@ -93,14 +93,14 @@ void task_Hours(void *data)
 
 	while(1)
 	{
+		if (hours == parameters_task.alarm.hour) {
+			xEventGroupSetBits(parameters_task.event_HH_MM_SS, EVENT_HOUR);
+		}
+
 		xSemaphoreTake(parameters_task.hours_semaphore, portMAX_DELAY); //Esperando
 		hours++;
 		if (hours >= HORAS) {
 			hours = 0;
-		}
-
-		if (hours == parameters_task.alarm.hour) {
-			xEventGroupSetBits(parameters_task.event_HH_MM_SS, EVENT_HOUR);
 		}
 
 		msg.value = hours;

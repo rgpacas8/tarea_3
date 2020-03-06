@@ -26,7 +26,7 @@
 #include "Tareas.h"
 
 /* TODO: insert other definitions and declarations here. */
-#define SET_HOUR   1
+#define SET_HOUR   0
 #define SET_MINUTE 1
 #define SET_SECOND 1
 

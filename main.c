@@ -26,13 +26,10 @@
 #include "Tareas.h"
 
 /* TODO: insert other definitions and declarations here. */
-#define SET_HOUR   0
+#define SET_HOUR   1
 #define SET_MINUTE 1
-#define SET_SECOND 15
+#define SET_SECOND 1
 
-#define EVENT_HOUR	    (1 << 2)
-#define EVENT_MINUTE    (1 << 1)
-#define EVENT_SECOND    (1 << 0)
 
 int main(void) {
 	/* Init board hardware. */
@@ -79,8 +76,8 @@ int main(void) {
 	xTaskCreate(task_Hours, "task_Hours", 	  200, (void*) &parameters_task,
 			configMAX_PRIORITIES, NULL);
 
-//	xTaskCreate(task_Alarm, "task_Alarm", 	  200, (void*) &parameters_task,
-//			configMAX_PRIORITIES, NULL);
+	xTaskCreate(task_Alarm, "task_Alarm", 	  200, (void*) &parameters_task,
+			configMAX_PRIORITIES, NULL);
 
 	xTaskCreate(task_Print, "task_Print", 	  200, (void*) &parameters_task,
 			configMAX_PRIORITIES, NULL);

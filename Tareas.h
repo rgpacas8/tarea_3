@@ -29,6 +29,31 @@ typedef struct {
 
 
 /* Other definitions and declarations here. */
+#define EVENT_HOUR	    (1 << 2)
+#define EVENT_MINUTE    (1 << 1)
+#define EVENT_SECOND    (1 << 0)
+
+#define DEBUG_ON	 	//** For debugging purposes */
+//#define DEBUG_OFF		//** For normal execution */
+
+#ifdef DEBUG_ON
+	#define HORAS		3
+	#define MINUTOS		3
+	#define SEGUNDOS	3
+#endif
+
+#ifdef DEBUG_OFF
+	#define HORAS		24
+	#define MINUTOS		60
+	#define SEGUNDOS	60
+
+#endif
+
+typedef enum
+{
+	FALSE = 0, TRUE = 1
+} boolean_t;
+
 typedef struct {
 	uint8_t second;
 	uint8_t minute;

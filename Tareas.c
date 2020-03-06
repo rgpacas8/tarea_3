@@ -26,16 +26,25 @@ void task_Seconds(void *data)
 	TickType_t last_wake_time = xTaskGetTickCount();
 
 	parameters_task_t parameters_task = *((parameters_task_t*) data);
+	EventBits_t event_all_flags = 0;
+	EventBits_t event_minu_flag = 0;
 
 	while (1)
 	{
 		seconds++;
-		if (seconds >= 60) {
-		seconds = 0;
-		xSemaphoreGive(parameters_task.minutes_semaphore);// Libera semaforo de minutos
+		if (seconds >= SEGUNDOS) {
+			seconds = 0;
+			xSemaphoreGive(parameters_task.minutes_semaphore); // Libera semaforo de minutos
 		}
 
-		//PRINTF("\rTime: %d seconds since reset\n", seconds);
+		event_all_flags = xEventGroupGetBitsFromISR(parameters_task.event_HH_MM_SS);
+		event_minu_flag = ((event_all_flags) & (EVENT_MINUTE)) >> 1;
+
+		if ((event_minu_flag == TRUE)
+						&& (seconds == parameters_task.alarm.second)) {
+			xEventGroupSetBits(parameters_task.event_HH_MM_SS, EVENT_SECOND);
+		}
+
 		msg.value = seconds;
 		xQueueSend(parameters_task.time_queue, &msg, portMAX_DELAY);
 		vTaskDelayUntil(&last_wake_time, pdMS_TO_TICKS(1000));
@@ -49,16 +58,26 @@ void task_Minutes(void *data)
 	    msg.time_type = minutes_type;
 		static uint32_t minutes = 0;
 		parameters_task_t parameters_task = *((parameters_task_t*) data);
+		EventBits_t event_all_flags = 0;
+		EventBits_t event_hora_flag = 0;
 
 	while (1)
 	{
-		xSemaphoreTake(parameters_task.minutes_semaphore,portMAX_DELAY);//Esperando
+		xSemaphoreTake(parameters_task.minutes_semaphore,portMAX_DELAY);//Esperando para tomar semaforo de minutos
 		minutes++;
-		if (minutes >= 60) {
-			xSemaphoreGive(parameters_task.hours_semaphore); // Libera semaforo de minutos
+		if (minutes >= MINUTOS) {
+			xSemaphoreGive(parameters_task.hours_semaphore); // Libera semaforo de horas
 			minutes = 0;
 		}
-		//PRINTF("\rTime: %d minutes since reset\n", minutes);
+
+		event_all_flags = xEventGroupGetBitsFromISR(parameters_task.event_HH_MM_SS);
+		event_hora_flag = ((event_all_flags) & (EVENT_HOUR)) >> 2;
+
+		if ((event_hora_flag == TRUE)
+						&& (minutes == parameters_task.alarm.minute)) {
+			xEventGroupSetBits(parameters_task.event_HH_MM_SS, EVENT_MINUTE);
+		}
+
 		msg.value = minutes;
 		xQueueSend(parameters_task.time_queue, &msg, portMAX_DELAY);
 
@@ -76,10 +95,14 @@ void task_Hours(void *data)
 	{
 		xSemaphoreTake(parameters_task.hours_semaphore, portMAX_DELAY); //Esperando
 		hours++;
-		if (hours >= 24) {
+		if (hours >= HORAS) {
 			hours = 0;
 		}
-		//PRINTF("\rTime: %d hours since reset\n", hours);
+
+		if (hours == parameters_task.alarm.hour) {
+			xEventGroupSetBits(parameters_task.event_HH_MM_SS, EVENT_HOUR);
+		}
+
 		msg.value = hours;
 		xQueueSend(parameters_task.time_queue, &msg, portMAX_DELAY);
 	}
@@ -87,10 +110,23 @@ void task_Hours(void *data)
 
 void task_Alarm(void *data)
 {
+	parameters_task_t parameters_task = *((parameters_task_t*)data);
 
-	while(1)
-	{
+	while (1) {
+	 /*
+	  * xEventGroupWaitBits(xEventGroup,
+	  *		uxBitsToWaitFor, 			xClearOnExit, 	xWaitForAllBits,   xTicksToWait);
+	  */
+		xEventGroupWaitBits(parameters_task.event_HH_MM_SS,
+				EVENT_HOUR | EVENT_MINUTE | EVENT_SECOND, pdFALSE, pdTRUE, portMAX_DELAY);
 
+		xEventGroupClearBits(parameters_task.event_HH_MM_SS, EVENT_HOUR);
+		xEventGroupClearBits(parameters_task.event_HH_MM_SS, EVENT_MINUTE);
+		xEventGroupClearBits(parameters_task.event_HH_MM_SS, EVENT_SECOND);
+
+		xSemaphoreTake(parameters_task.mutex_UART, portMAX_DELAY);
+		PRINTF("--- --- --- --- ALARM --- --- --- ---\n ");
+		xSemaphoreGive(parameters_task.mutex_UART);
 	}
 }
 
@@ -103,27 +139,25 @@ void task_Print(void *data)
 
 	while (1) {
 		xQueueReceive(parameters_task.time_queue, &received_msg,
-				portMAX_DELAY);
+		portMAX_DELAY);
 
-	//	xSemaphoreTake(parameters_task.mutex_UART, portMAX_DELAY);
-		switch (received_msg.time_type) {
-		case seconds_type:
-			segundos = received_msg.value;
-			//PRINTF("Seconds sent: %d \n",received_msg.value);
-			break;
-		case minutes_type:
-			minutos = received_msg.value;
-			//PRINTF("Minutes sent: %d \n",received_msg.value);
-			break;
-		case hours_type:
-			horas = received_msg.value;
-			//PRINTF("Hours sent: %d\n ",received_msg.value);
-			break;
-		default:
-			PRINTF("\rError\n");
-			break;
+		xSemaphoreTake(parameters_task.mutex_UART, portMAX_DELAY);
+		switch (received_msg.time_type)
+		{
+			case seconds_type:
+				segundos = received_msg.value;
+				break;
+			case minutes_type:
+				minutos = received_msg.value;
+				break;
+			case hours_type:
+				horas = received_msg.value;
+				break;
+			default:
+				PRINTF("\rError\n");
+				break;
 		}
 		PRINTF("Reloj: %d : %d : %d\n ", horas, minutos, segundos);
-	//	xSemaphoreGive(parameters_task.mutex_UART);
+		xSemaphoreGive(parameters_task.mutex_UART);
 	}
 }

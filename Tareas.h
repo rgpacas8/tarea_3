@@ -23,8 +23,8 @@ typedef enum {
 } time_types_t;
 
 typedef struct {
-	time_types_t time_type;
-	uint8_t value;
+	time_types_t time_type;	//ID
+	uint8_t value;//DATO de tiempo
 } time_msg_t;
 
 
